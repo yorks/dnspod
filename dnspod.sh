@@ -127,7 +127,9 @@ load_cf(){
     for cf in ${CFS}; do
         test -f ${cf} && . ${cf} && break
     done
-    test -f ${cf} || _exiterr "Missing dnspod.ini cf, cf must place to: /etc/dnspod.ini | /opt/etc/dnspod.ini | /tmp/dnspod.ini ${SCRIPTDIR}/dnspod.ini ${BASEDIR}/dnspod.ini"
+    if [[ -z "${LOGIN_TK}" ]];then
+        test -f ${cf}  || _exiterr "Missing LOGIN_TK value you can configure it by export LOGIN_TK=?? or place to configure file which must place to: /etc/dnspod.ini | /opt/etc/dnspod.ini | /tmp/dnspod.ini ${SCRIPTDIR}/dnspod.ini ${BASEDIR}/dnspod.ini"
+    fi
     [[ -z "${LOGIN_TK}" ]] && _exiterr "Missing LOGIN_TK  in cf"
     echo ${LOGIN_TK} | grep -q ','  || _exiterr  "Bad LOGIN_TK formart, Must like this: ID,Token"
 }
@@ -199,5 +201,3 @@ add_or_update_sub_record_value()
 # Run script
 #main "${@:-}"
 
-
-add_or_update_sub_record_value  yy8.info _acme-challenge TESTbyBashFunc TXT
