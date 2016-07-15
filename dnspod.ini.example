@@ -1,0 +1,6 @@
+# dnspod.sh config example
+# Notice: do not put space before or after "="
+# Please get it from:
+#  https://www.dnspod.cn/console/user/security
+# format:    ID,Token
+LOGIN_TK="10401,258b76dc666391390b0c590d676bd18b"
