@@ -103,6 +103,13 @@ set_domain_record(){
   echo "${4}" | egrep -q "^(A|TXT)$" || _exiterr "Missing record type or unkonwn record type, sopport: A or TXT only."
   api_request "$path" "${args}"
 }
+del_domain_record(){
+  path='Record.Remove'
+  args="domain_id=${1}&record_id=${2}"
+  [[ -z "${2}" ]] && _exiterr "Missing record_id"
+  api_request "$path" "${args}"
+  
+}
 
 # Check for script dependencies
 check_dependencies() {
@@ -194,6 +201,43 @@ add_or_update_sub_record_value()
 }
 
 
+del_sub_record_value()
+{
+    domain=$1
+    sub=$2
+    domain_info=$(get_domain_info ${domain})
+    domain_id=$(echo ${domain_info}|get_json_string_value id) 
+    [[ "x$domain_id" == "x" ]] && {
+        echo "Maybe domain not exist?"
+        echo "Cannot found the domain_id from the domain info from api:"
+        echo $domain_info
+        echo 
+        echo "failed"
+        return 1
+    }
+
+    record=$(get_domain_record_list "${domain_id}" $sub)
+    code=$(echo "${record}" | get_json_string_value code)
+
+    if [[ "x$code" != "x1" ]]; then 
+        echo $record
+        echo "record $sub.$domain not found"
+        echo "failed"
+        return 0
+    else
+        echo "recored $sub.$domain $rtype is already exist, new delete it."
+        rid=$(echo "${record}" | get_json_string_value id)
+        oldvalue=$(echo "${record}" | get_json_string_value value)
+        echo "deleting $sub.$domain, record_id:$rid oldvalue:$oldvalue "
+        delinfo=$(del_domain_record $domain_id $rid)
+        check_ok "${delinfo}"
+        return 0
+    fi
+}
+
+
+
+
 # Run script
 # Check for missing dependencies
 check_dependencies
@@ -208,6 +252,9 @@ case "$1" in
         ;;
     "update")
         add_or_update_sub_record_value $2 $3 $4 $5
+        ;;
+    "delete")
+        del_sub_record_value $2 $3
         ;;
     *)  
         echo "Unkown cmd ${1}"
