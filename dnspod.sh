@@ -151,10 +151,6 @@ main() {
 }
 
 
-# Check for missing dependencies
-check_dependencies
-load_cf
-#get_domain_list | get_json_string_value name
 
 add_or_update_sub_record_value()
 {
@@ -188,8 +184,8 @@ add_or_update_sub_record_value()
         rid=$(echo "${record}" | get_json_string_value id)
         oldvalue=$(echo "${record}" | get_json_string_value value)
         echo "record_id:$rid oldvalue:$oldvalue newvalue:$value"
-        echo "y|n:"
-        read
+        #echo "y|n:"
+        #read
         setinfo=$(set_domain_record $domain_id $rid $sub $rtype  $value)
         check_ok "${setinfo}"
         return 0
@@ -199,5 +195,22 @@ add_or_update_sub_record_value()
 
 
 # Run script
-#main "${@:-}"
-
+# Check for missing dependencies
+check_dependencies
+load_cf
+#get_domain_list | get_json_string_value name
+case "$1" in
+    "get_domain_list")
+        get_domain_list | get_json_string_value name
+        ;;
+    "get_domain_info")
+        get_domain_info $2
+        ;;
+    "update")
+        add_or_update_sub_record_value $2 $3 $4 $5
+        ;;
+    *)  
+        echo "Unkown cmd ${1}"
+        exit 1
+        ;;
+esac
