@@ -157,7 +157,30 @@ main() {
     echo 
 }
 
+add_sub_record_value()
+{
+    domain=$1
+    sub=$2
+    value=$3
+    rtype=$4
+    [[ "x$rtype" == "x" ]] && rtype="A"
+    domain_info=$(get_domain_info ${domain})
+    domain_id=$(echo ${domain_info}|get_json_string_value id) 
+    [[ "x$domain_id" == "x" ]] && {
+        echo "Maybe domain not exist?"
+        echo "Cannot found the domain_id from the domain info from api:"
+        echo $domain_info
+        echo 
+        echo "failed"
+        return 1
+    }
 
+    echo "adding the new record $sub.$domain $rtype"
+    addinfo=$(add_domain_record $domain_id $sub $rtype  $value)
+    check_ok "${addinfo}"
+    return 0
+}
+ 
 
 add_or_update_sub_record_value()
 {
@@ -252,6 +275,9 @@ case "$1" in
         ;;
     "update")
         add_or_update_sub_record_value $2 $3 $4 $5
+        ;;
+    "add")
+        add_sub_record_value $2 $3 $4 $5
         ;;
     "delete")
         del_sub_record_value $2 $3
