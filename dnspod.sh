@@ -114,7 +114,7 @@ del_domain_record(){
 # Check for script dependencies
 check_dependencies() {
   # just execute some dummy and/or version commands to see if required tools exist and are actually usable
-  openssl version > /dev/null 2>&1 || _exiterr "This script requires an openssl binary."
+  #openssl version > /dev/null 2>&1 || _exiterr "This script requires an openssl binary."
   sed "" < /dev/null > /dev/null 2>&1 || _exiterr "This script requires sed with support for extended (modern) regular expressions."
   grep -V > /dev/null 2>&1 || _exiterr "This script requires grep."
   mktemp -u -t XXXXXX > /dev/null 2>&1 || _exiterr "This script requires mktemp."
@@ -180,6 +180,40 @@ add_sub_record_value()
     check_ok "${addinfo}"
     return 0
 }
+
+get_sub_record_value()
+{
+    domain=$1
+    sub=$2
+    rtype=$3
+    [[ "x$rtype" == "x" ]] && rtype="A"
+    domain_info=$(get_domain_info ${domain})
+    domain_id=$(echo ${domain_info}|get_json_string_value id) 
+    [[ "x$domain_id" == "x" ]] && {
+        echo "Maybe domain not exist?"
+        echo "Cannot found the domain_id from the domain info from api:"
+        echo $domain_info
+        echo 
+        echo "failed"
+        return 1
+    }
+
+    record=$(get_domain_record_list "${domain_id}" $sub)
+    code=$(echo "${record}" | get_json_string_value code)
+
+    if [[ "x$code" != "x1" ]]; then 
+        echo "record not exist. $sub.$domain $rtype"
+        echo "failed"
+        return 1
+    else
+        rid=$(echo "${record}" | get_json_string_value id)
+        oldvalue=$(echo "${record}" | get_json_string_value value)
+        echo "$sub.$domain $rtype record_id:$rid value:$oldvalue"
+        return 0
+    fi
+
+}
+
  
 
 add_or_update_sub_record_value()
@@ -272,6 +306,9 @@ case "$1" in
         ;;
     "get_domain_info")
         get_domain_info $2
+        ;;
+    "get_sub_info")
+        get_sub_record_value $2 $3 $4
         ;;
     "update")
         add_or_update_sub_record_value $2 $3 $4 $5
